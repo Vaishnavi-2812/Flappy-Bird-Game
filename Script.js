@@ -1,116 +1,92 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-
-const retryBtn = document.getElementById("retryBtn");
-
-// SOUND ELEMENTS
-const jumpSound = document.getElementById("jumpSound");
-const gameOverSound = document.getElementById("gameOverSound");
-const pointSound = document.getElementById("pointSound");
-
 canvas.width = 400;
 canvas.height = 600;
 
-let birdColor = "red";
+let birdImg = new Image();
+// YOUR BIRD IMAGE (base64)
+birdImg.src = "data:image/webp;base64,UklGRlQdAABXRUJQVlA4IEgdAADQcACdASoEARgBPjEYikMiIaEUOezgIAMEpu/HyZjuWZL/t/48eExZnrP5A/lJ8xdYfrH3z/rP";
+
+// Game variables
+let birdX = 50;
+let birdY = 150;
+let velocity = 0;
+let gravity = 1.3;
+let gap = 140;
+let pipes = [];
 let score = 0;
+let gameOver = false;
 
-let bird, pipeX, pipeY, pipeWidth, pipeGap, gameOver;
-
-function resetValues() {
-    bird = { x: 50, y: 250, width: 30, height: 30, gravity: 0, jump: -6 };
-    pipeWidth = 60;
-    pipeGap = 150;
-    pipeX = 400;
-    pipeY = Math.floor(Math.random() * 300) + 50;
-    gameOver = false;
-    score = 0;
-
-    retryBtn.style.display = "none";
-}
-
-resetValues();
+pipes.push({ x: 400, top: Math.random() * 250 + 50 });
 
 function drawBird() {
-    ctx.fillStyle = birdColor;
-    ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+    ctx.drawImage(birdImg, birdX, birdY, 45, 45);
 }
 
 function drawPipes() {
     ctx.fillStyle = "green";
-    ctx.fillRect(pipeX, 0, pipeWidth, pipeY);
-    ctx.fillRect(pipeX, pipeY + pipeGap, pipeWidth, canvas.height);
+    pipes.forEach(pipe => {
+        ctx.fillRect(pipe.x, 0, 60, pipe.top);
+        ctx.fillRect(pipe.x, pipe.top + gap, 60, canvas.height - pipe.top - gap);
+    });
 }
 
-function update() {
-    if (!gameOver) {
-        bird.gravity += 0.3;
-        bird.y += bird.gravity;
-
-        pipeX -= 3;
-
-        if (pipeX < -pipeWidth) {
-            pipeX = canvas.width;
-            pipeY = Math.floor(Math.random() * 300) + 50;
-
-            score++;
-            pointSound.play();  // play score sound
-        }
-
-        if (
-            bird.y + bird.height > canvas.height ||
-            bird.y < 0 ||
-            (bird.x + bird.width > pipeX &&
-             bird.x < pipeX + pipeWidth &&
-             (bird.y < pipeY || bird.y + bird.height > pipeY + pipeGap))
-        ) {
-            gameOver = true;
-            retryBtn.style.display = "block";
-            gameOverSound.play();     // GAME OVER SOUND
-        }
-    }
+function gameLoop() {
+    if (gameOver) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     drawBird();
     drawPipes();
 
-    // SCORE DISPLAY
-    ctx.fillStyle = "white";
-    ctx.font = "30px Arial";
-    ctx.fillText("Score: " + score, 10, 40);
+    velocity += gravity;
+    birdY += velocity;
 
-    if (gameOver) {
-        ctx.fillStyle = "black";
-        ctx.font = "40px Arial";
-        ctx.fillText("GAME OVER", 80, 290);
+    pipes.forEach(pipe => {
+        pipe.x -= 1; // SLOW PIPE SPEED ONLY
+
+        if (pipe.x < -60) {
+            pipe.x = canvas.width;
+            pipe.top = Math.random() * 250 + 50;
+            score++;
+        }
+
+        if (
+            birdX + 45 > pipe.x &&
+            birdX < pipe.x + 60 &&
+            (birdY < pipe.top || birdY + 45 > pipe.top + gap)
+        ) {
+            endGame();
+        }
+    });
+
+    if (birdY + 45 > canvas.height || birdY < 0) {
+        endGame();
     }
 
-    requestAnimationFrame(update);
+    requestAnimationFrame(gameLoop);
 }
 
-document.addEventListener("keydown", () => {
-    if (!gameOver) {
-        bird.gravity = bird.jump;
-        jumpSound.play();  // jump sound
-    }
+function endGame() {
+    gameOver = true;
+
+    ctx.fillStyle = "black";
+    ctx.font = "40px Arial";
+    ctx.fillText("Game Over!", 110, 260);
+
+    document.getElementById("retryBtn").style.display = "block";
+}
+
+function restartGame() {
+    location.reload();
+}
+
+window.addEventListener("keydown", () => {
+    if (!gameOver) velocity = -12;
 });
 
-// Restart Game
-function restartGame() {
-    resetValues();
-}
+window.addEventListener("mousedown", () => {
+    if (!gameOver) velocity = -12;
+});
 
-// SETTINGS
-function openSettings() {
-    document.getElementById("settingsPopup").style.display = "block";
-}
-
-function closeSettings() {
-    document.getElementById("settingsPopup").style.display = "none";
-}
-
-function changeBirdColor(color) {
-    birdColor = color;
-}
-
-update();
+gameLoop();
