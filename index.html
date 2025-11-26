@@ -5,7 +5,32 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <!-- Settings Button -->
+    <button id="settingsBtn" onclick="openSettings()">⚙️</button>
+
+    <!-- Settings Popup -->
+    <div id="settingsPopup">
+        <h2>Settings</h2>
+        <p>Select Bird Color:</p>
+
+        <button class="colorBtn" style="background:red;" onclick="changeBirdColor('red')">Red</button>
+        <button class="colorBtn" style="background:blue;" onclick="changeBirdColor('blue')">Blue</button>
+        <button class="colorBtn" style="background:yellow; color:black;" onclick="changeBirdColor('yellow')">Yellow</button>
+
+        <br><br>
+        <button id="closeBtn" onclick="closeSettings()">Close</button>
+    </div>
+
+    <!-- Try Again Button -->
+    <button id="retryBtn" onclick="restartGame()">TRY AGAIN</button>
+
     <canvas id="gameCanvas"></canvas>
+
+    <!-- SOUND FILES -->
+    <audio id="jumpSound" src="jump.mp3"></audio>
+    <audio id="gameOverSound" src="gameover.mp3"></audio>
+    <audio id="pointSound" src="point.mp3"></audio>
 
     <script src="script.js"></script>
 </body>
