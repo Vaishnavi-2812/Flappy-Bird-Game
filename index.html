@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flappy Bird Clone</title>
-    <link rel="stylesheet" href="style.css">
+    
+    <link rel="stylesheet" href="Style.css"> 
+    
+    <link rel="preload" href="red-bird.png" as="image"> 
 </head>
 <body>
     <div id="game-container">
@@ -12,7 +15,7 @@
 
         <div id="start-screen" class="game-screen">
             <h1>Flappy Bird</h1>
-            <p>Press SPACE or tap to jump!</p>
+            <p>Press **SPACE** or tap to jump!</p>
             <button id="startButton">Start Game</button>
             <button id="optionsButton">Options</button>
         </div>
@@ -25,20 +28,21 @@
 
         <div id="options-menu" class="game-screen hidden">
             <h2>Game Options</h2>
+            <p>Note: Currently uses **red-bird.png** for all selections, but the physics change (effect) is applied.</p>
             <label for="birdSelector">Select Bird:</label>
             <select id="birdSelector">
-                <option value="yellow">Default Yellow Bird</option>
-                <option value="red">Red Bird (Fast Fall)</option>
-                <option value="blue">Blue Bird (Slow Fall)</option>
+                <option value="yellow">Default Bird (Normal Gravity)</option>
+                <option value="red">Red Bird (Fast Fall - **Hard**)</option>
+                <option value="blue">Blue Bird (Slow Fall - **Easy**)</option>
             </select>
             <button id="saveOptionsButton">Save & Back</button>
         </div>
 
     </div>
     
-    <audio id="scoreAudio" src="score.mp3" preload="auto"></audio>
-    <audio id="gameOverAudio" src="gameover.mp3" preload="auto"></audio>
+    <audio id="scoreAudio" src="game-score.mp3" preload="auto"></audio>
+    <audio id="gameOverAudio" src="game-over.mp3" preload="auto"></audio>
 
-    <script src="game.js"></script>
+    <script src="Script.js"></script>
 </body>
 </html>

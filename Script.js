@@ -1,7 +1,7 @@
 // --- Game Setup and Variables ---
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const scoreAudio = document.getElementById('scoreAudio');
+const scoreAudio = document.getElementById('scoreAudio'); 
 const gameOverAudio = document.getElementById('gameOverAudio');
 const startScreen = document.getElementById('start-screen');
 const gameOverScreen = document.getElementById('game-over-screen');
@@ -13,14 +13,21 @@ let score = 0;
 let gravity = 0.2; // Default gravity
 let jumpVelocity = -4; // Default jump power
 
-// Bird Object
+// Load the bird image (Requires red-bird.png file)
+const birdImage = new Image();
+birdImage.src = 'red-bird.png'; 
+birdImage.onerror = () => {
+    console.error('❌ ERROR: Failed to load red-bird.png. Check file name and path.');
+};
+
+// Bird Object (using width/height for image drawing)
 const bird = {
     x: 50,
     y: canvas.height / 2,
-    radius: 15,
+    width: 34, // Sprite size
+    height: 24, // Sprite size
     velocity: 0,
-    selectedBird: 'yellow',
-    color: 'yellow' // Default bird color
+    selectedBird: 'red' // Tracks current setting
 };
 
 // Pipe Array
@@ -29,38 +36,37 @@ let pipeGap = 150;
 let pipeWidth = 50;
 let frames = 0; // Game frames counter
 
-// --- Requirement 2: Bird Selection Logic ---
+// --- Requirement 2: Bird Selection Logic (Changing Physics Effect) ---
 
 function applyBirdEffect(birdType) {
     bird.selectedBird = birdType;
-    // Apply game-affecting changes (The "effective" part)
+    
     switch (birdType) {
         case 'red':
             // Red Bird: Fast fall (more difficult)
             gravity = 0.3;
-            bird.color = 'red';
+            jumpVelocity = -4; 
             break;
         case 'blue':
             // Blue Bird: Slow fall (easier)
             gravity = 0.15;
-            bird.color = 'blue';
+            jumpVelocity = -3.5; // Slightly weaker jump for the "easier" feel
             break;
         case 'yellow':
         default:
-            // Default Yellow Bird
+            // Default Bird: Normal physics
             gravity = 0.2;
-            bird.color = 'yellow';
+            jumpVelocity = -4;
             break;
     }
 }
 
-// Event listeners for UI
+// Event Listeners
 document.getElementById('startButton').addEventListener('click', startGame);
 document.getElementById('restartButton').addEventListener('click', startGame);
 document.getElementById('optionsButton').addEventListener('click', showOptions);
 document.getElementById('saveOptionsButton').addEventListener('click', saveOptions);
 
-// Keyboard/Tap listeners for game control
 document.addEventListener('keydown', handleInput);
 canvas.addEventListener('click', jump);
 
@@ -79,7 +85,6 @@ function jump() {
 // --- Game Functions ---
 
 function startGame() {
-    // Apply currently selected bird's effect
     applyBirdEffect(birdSelector.value); 
 
     score = 0;
@@ -92,7 +97,6 @@ function startGame() {
     gameOverScreen.classList.add('hidden');
     optionsMenu.classList.add('hidden');
 
-    // Start the game loop
     gameLoop();
 }
 
@@ -102,21 +106,21 @@ function showOptions() {
 }
 
 function saveOptions() {
-    // Get the selected value and apply its effect immediately
     applyBirdEffect(birdSelector.value); 
     
-    // Go back to start screen
     optionsMenu.classList.add('hidden');
     startScreen.classList.remove('hidden');
 }
 
-
 function drawBird() {
-    ctx.beginPath();
-    ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
-    ctx.fillStyle = bird.color; // Use selected color
-    ctx.fill();
-    ctx.closePath();
+    // Draws the bird image, centering it around the bird's (x, y) coordinates
+    ctx.drawImage(
+        birdImage, 
+        bird.x - bird.width / 2, // Top-left X
+        bird.y - bird.height / 2, // Top-left Y
+        bird.width, 
+        bird.height
+    );
 }
 
 function drawPipes() {
@@ -138,7 +142,7 @@ function updateGame() {
     bird.velocity += gravity;
     bird.y += bird.velocity;
 
-    // 2. Add New Pipes (e.g., every 90 frames)
+    // 2. Add New Pipes
     if (frames % 90 === 0) {
         const minHeight = 50;
         const maxHeight = canvas.height - pipeGap - minHeight;
@@ -150,33 +154,32 @@ function updateGame() {
         });
     }
 
-    // 3. Move and Clean Pipes
+    // 3. Move and Score Pipes
     pipes.forEach(p => {
         p.x -= 2; // Pipe speed
-        // Remove pipes that move off-screen
         if (p.x + pipeWidth < 0) {
-            pipes.shift();
+            pipes.shift(); // Remove off-screen pipes
         }
         
-        // Check for score (Requirement 1: Score Audio)
+        // 🟢 Score Audio (Requirement 1)
         if (p.x + pipeWidth < bird.x && !p.passed) {
             score++;
             p.passed = true;
-            scoreAudio.currentTime = 0; // Rewind to play immediately
-            scoreAudio.play();
+            scoreAudio.currentTime = 0; 
+            scoreAudio.play().catch(e => console.log("Audio skipped or failed to play: " + e)); // Add catch for auto-play errors
         }
     });
 
     // 4. Collision Detection
     if (checkCollision()) {
         endGame();
-        return; // Stop updating
+        return; 
     }
 
-    // 5. Keep bird on screen (Ground/Ceiling collision)
-    if (bird.y + bird.radius > canvas.height || bird.y - bird.radius < 0) {
+    // 5. Ground/Ceiling Collision
+    if (bird.y + bird.height / 2 > canvas.height || bird.y - bird.height / 2 < 0) {
         endGame();
-        return; // Stop updating
+        return; 
     }
 
     frames++;
@@ -184,13 +187,25 @@ function updateGame() {
 
 function checkCollision() {
     for (const p of pipes) {
-        // Basic rectangular collision check for simplicity
-        const isXOverlap = bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + pipeWidth;
+        // Bird Bounding Box
+        const birdLeft = bird.x - bird.width / 2;
+        const birdRight = bird.x + bird.width / 2;
+        const birdTop = bird.y - bird.height / 2;
+        const birdBottom = bird.y + bird.height / 2;
+
+        // Pipe Bounding Box
+        const pipeLeft = p.x;
+        const pipeRight = p.x + pipeWidth;
+        const pipeTopHeight = p.height; 
+        const pipeBottomY = p.height + pipeGap; 
+
+        // Check for horizontal overlap
+        const isXOverlap = birdRight > pipeLeft && birdLeft < pipeRight;
         
-        // Check collision with top pipe OR bottom pipe
         if (isXOverlap) {
-            const isTopCollision = bird.y - bird.radius < p.height;
-            const isBottomCollision = bird.y + bird.radius > p.height + pipeGap;
+            // Collision with top pipe OR bottom pipe
+            const isTopCollision = birdTop < pipeTopHeight;
+            const isBottomCollision = birdBottom > pipeBottomY;
 
             if (isTopCollision || isBottomCollision) {
                 return true;
@@ -202,22 +217,23 @@ function checkCollision() {
 
 function endGame() {
     gameRunning = false;
-    // Requirement 1: Game Over Audio
+    // 🟢 Game Over Audio (Requirement 1)
     gameOverAudio.currentTime = 0; 
-    gameOverAudio.play();
+    gameOverAudio.play().catch(e => console.log("Audio skipped or failed to play: " + e));
     
     document.getElementById('finalScore').textContent = score;
     gameOverScreen.classList.remove('hidden');
 }
 
 function draw() {
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
 
     drawPipes();
-    drawBird();
+    // Only draw the bird if the image is loaded
+    if (birdImage.complete && birdImage.naturalHeight !== 0) {
+        drawBird(); 
+    }
 
-    // Draw Score
     ctx.fillStyle = 'white';
     ctx.font = '30px Arial';
     ctx.fillText('Score: ' + score, 10, 40);
@@ -228,6 +244,6 @@ function gameLoop() {
     if (gameRunning) {
         updateGame();
         draw();
-        requestAnimationFrame(gameLoop); // Smoother animation
+        requestAnimationFrame(gameLoop);
     }
 }
