@@ -1,21 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Floppy Bird Game</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird Clone</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
 
-    <!-- Try Again Button -->
-    <button id="retryBtn" onclick="restartGame()">TRY AGAIN</button>
+        <div id="start-screen" class="game-screen">
+            <h1>Flappy Bird</h1>
+            <p>Press SPACE or tap to jump!</p>
+            <button id="startButton">Start Game</button>
+            <button id="optionsButton">Options</button>
+        </div>
 
-    <canvas id="gameCanvas"></canvas>
+        <div id="game-over-screen" class="game-screen hidden">
+            <h2>Game Over!</h2>
+            <p>Score: <span id="finalScore">0</span></p>
+            <button id="restartButton">Play Again</button>
+        </div>
 
-    <!-- SOUND FILES -->
-    <audio id="jumpSound" src="jump.mp3"></audio>
-    <audio id="gameOverSound" src="gameover.mp3"></audio>
-    <audio id="pointSound" src="point.mp3"></audio>
+        <div id="options-menu" class="game-screen hidden">
+            <h2>Game Options</h2>
+            <label for="birdSelector">Select Bird:</label>
+            <select id="birdSelector">
+                <option value="yellow">Default Yellow Bird</option>
+                <option value="red">Red Bird (Fast Fall)</option>
+                <option value="blue">Blue Bird (Slow Fall)</option>
+            </select>
+            <button id="saveOptionsButton">Save & Back</button>
+        </div>
 
-    <script src="script.js"></script>
+    </div>
+    
+    <audio id="scoreAudio" src="score.mp3" preload="auto"></audio>
+    <audio id="gameOverAudio" src="gameover.mp3" preload="auto"></audio>
+
+    <script src="game.js"></script>
 </body>
 </html>
